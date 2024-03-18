@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const pkSchema = new mongoose.Schema({
+const pukSchema = new mongoose.Schema({
     userId:{
         type: String,
         required: true,
@@ -17,5 +17,5 @@ const pkSchema = new mongoose.Schema({
     versionKey: false
 });
 
-const pkModel = mongoose.model('PrivateKey', pkSchema);
-module.exports = pkModel;
+const pukModel = mongoose.model('PublicKey', pukSchema);
+module.exports = pukModel;

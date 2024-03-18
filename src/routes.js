@@ -4,6 +4,11 @@ const UserModel = require('./models/user.model.js')
 const bcrypt = require('bcrypt');
 const userModel = require('./models/user.model.js');
 
+//RSA
+const pkModel = require('./models/privateKey.model.js');
+const pukModel = require('./models/publicKey.model.js');
+const rsaKeys = require('./rsaKeys.js');
+
 // Define routes
 router.post('/createUser', async (req, res) => {
     try {
@@ -14,8 +19,17 @@ router.post('/createUser', async (req, res) => {
         if (existingUser){
             return res.status(400).json({message: "[-] Email already exists"})
         }
+        //user info
         const encryptedPassword = await bcrypt.hash(password,10)
         const newUser = new UserModel({username,email,password: encryptedPassword})
+
+        //Keys info
+        const keys = rsaKeys(newUser.email);
+        const privateKey = new pkModel({userId: newUser.email, key: keys.privateKey});
+        const publicKey = new pukModel({userId: newUser.email, key: keys.publicKey});
+        await privateKey.save();
+        await publicKey.save();
+
         await newUser.save()
         res.status(201).json(newUser)
     } catch (error) {++
