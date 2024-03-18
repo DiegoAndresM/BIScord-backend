@@ -1,11 +1,19 @@
 const express = require('express');
 const http = require('http');
 const socket = require("socket.io")
-
+const bodyParser = require("body-parser")
+const cors = require("cors")
+require('./db.js')
 
 const app = express();
 const server = http.createServer(app);
 const io = socket(server);
+
+app.use(bodyParser.json())
+app.use(cors())
+
+const routes = require('./routes')
+app.use('/', routes);
 
 io.on("connection", (socket)=>{
     console.log("conected");
