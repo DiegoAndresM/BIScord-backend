@@ -44,7 +44,7 @@ router.post('/authUser', async (req, res) => {
     if (!user || !(await bcrypt.compare(password,user.password))){
         return res.status(401).json({message: '[-] Invalid email or password'})
     }
-    res.status(200).json({message: '[+] Authentication succesful'}, user)
+    res.status(200).json(user)
  } catch (error) {
     res.status(500).json({message:'[-] '+ error.message})
  }
