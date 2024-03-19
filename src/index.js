@@ -10,7 +10,9 @@ const server = http.createServer(app);
 const io = socket(server);
 
 app.use(bodyParser.json())
-app.use(cors())
+app.use(cors({
+    origin: '*'
+  }));
 
 const routes = require('./routes')
 app.use('/', routes);

@@ -40,6 +40,7 @@ router.post('/createUser', async (req, res) => {
 router.post('/authUser', async (req, res) => {
  try {
     const { email, password} = req.body
+    console.log(req.body)
     const user = await userModel.findOne({email})
     if (!user || !(await bcrypt.compare(password,user.password))){
         return res.status(401).json({message: '[-] Invalid email or password'})
