@@ -51,4 +51,15 @@ router.post('/authUser', async (req, res) => {
  }
 });
 
+router.get("/getUsers", async(req, res)=>{
+    try{
+        const users = await userModel.find().select('username email');
+        res.status(200).json(users);
+    }catch{
+        res.status(404).json({message: "Not users found"})
+    }
+});
+
 module.exports = router;
+
+
