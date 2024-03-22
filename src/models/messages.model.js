@@ -6,7 +6,13 @@ const msgSchema = new mongoose.Schema({
         required: true,
         trim: true
     },
-    userId: {
+    senderId: {
+        type: String,
+        trim: true,
+        required: true,
+        unique: true
+    },
+    receptorId: {
         type: String,
         trim: true,
         required: true,
