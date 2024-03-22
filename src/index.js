@@ -3,6 +3,15 @@ const http = require('http');
 const socket = require("socket.io");
 const bodyParser = require("body-parser");
 const cors = require("cors");
+const msg = require('./rsaMessages.js');
+
+
+const UserModel = require('./models/user.model.js')
+const messageModel = require('./models/messages.model.js')
+const privateKey = require('./models/privateKey.model.js')
+const publicKey = require('./models/publicKey.model.js')
+
+
 require('./db.js');
 
 const app = express();
@@ -42,16 +51,34 @@ io.on("connection", (socket) => {
     */
 
 
-    socket.on('private_message', (data) => {
+    socket.on('private_message', async (data) => {
         const { sender, receptor, message } = data;
 
         // checa si esta conectado y si no se lo madrea... digo nomas lo guarda en la db
         if (users[receptor]) {
             io.to(users[receptor]).emit('private_message', { sender, message });
+
+            const pubKeyInfo = await publicKey.findOne({ userId: receptor});
+            const pubKey = pubKeyInfo.key;
+            //console.log('El mensaje se encriptara con la public key de: ', receptor, ' la cual es: ', pubKey) USAR PARA DEBUG
+            const encryptedMessage = msg.encryptMessage(message, pubKey);
+
+            const newMessage = new messageModel({content: encryptedMessage, senderId: sender, receptorId: receptor});
+            await newMessage.save();
+
         } else {
             // Aqui handleamos cuando no este el otro en linea. en teoria no deberia tronar si el usuario al cerrar la app se desloguea
-            console.log(`${receptor} no anda en linea`);
+            console.log(`${receptor} no anda en linea, se guardara su mensaje`);
             // podemos emitir algo para avisar al sender que el receptor no esta en linea pero eso seria crema
+
+            //Guarda el mensaje para traerlo despues con un endpoint normal
+            const pubKeyInfo = await publicKey.findOne({ userId: receptor});
+            const pubKey = pubKeyInfo.key;
+            //console.log('El mensaje se encriptara con la public key de: ', receptor, ' la cual es: ', pubKey) USAR PARA DEBUG
+            const encryptedMessage = msg.encryptMessage(message, pubKey);
+
+            const newMessage = new messageModel({content: encryptedMessage, senderId: sender, receptorId: receptor});
+            await newMessage.save();
         }
     });
 

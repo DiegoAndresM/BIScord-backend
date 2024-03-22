@@ -4,7 +4,8 @@ const pkSchema = new mongoose.Schema({
     userId:{
         type: String,
         required: true,
-        trim: true
+        trim: true,
+        unique: true
     },
     key: {
         type: String,
