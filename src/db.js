@@ -3,7 +3,7 @@ const mongoose = require('mongoose')
 const mongoUrl = "" //Poner aca la uri
 // const mongoUrl = process.env.MONGO_URL
 
-console.log('uy: ', mongoUrl)
+// console.log('uy: ', mongoUrl)
 
 mongoose.connect(mongoUrl, {
 }).then(()=>{

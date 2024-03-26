@@ -3,7 +3,7 @@ const router = express.Router();
 const UserModel = require('./models/user.model.js')
 const bcrypt = require('bcrypt');
 const userModel = require('./models/user.model.js');
-
+const msgModel = require('./models/messages.model.js')
 //RSA
 const pkModel = require('./models/privateKey.model.js');
 const pukModel = require('./models/publicKey.model.js');
@@ -60,6 +60,26 @@ router.get("/getUsers", async(req, res)=>{
     }
 });
 
+router.post("/getMgsByUsersId", async(req, res)=>{
+    try{
+        let decryptedMsgs = []
+        const {senderId, receptorId} = req.body
+        const messages = await msgModel.find({senderId,receptorId}).select(`content`)
+        console.log('a')
+        const senderEmail = await userModel.find({_id: senderId}).select(`email`);
+        console.log(senderEmail[0].email)
+
+        for(let i = 0; i<messages.length; i++){
+            console.log('b')
+            const pkey = await pkModel.find({senderId}).select(`key`)
+            const currentDecryptedMsg = await decryptMessage(messages[i],pkey,senderEmail)
+            decryptedMsgs.push(currentDecryptedMsg)
+        }
+        res.status(200).json(decryptedMsgs);
+    }catch{
+        res.status(404).json({message: "Not users found"})
+    }
+});
 module.exports = router;
 
 
