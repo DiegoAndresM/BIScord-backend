@@ -8,6 +8,7 @@ const msgModel = require('./models/messages.model.js')
 const pkModel = require('./models/privateKey.model.js');
 const pukModel = require('./models/publicKey.model.js');
 const rsaKeys = require('./rsaKeys.js');
+const msg = require('./rsaMessages.js');
 
 // Define routes
 router.post('/createUser', async (req, res) => {
@@ -60,22 +61,47 @@ router.get("/getUsers", async(req, res)=>{
     }
 });
 
-router.post("/getMgsByUsersId", async(req, res)=>{
+router.post("/getChat", async(req, res)=>{
+    
+    
     try{
-        let decryptedMsgs = []
         const {senderId, receptorId} = req.body
-        const messages = await msgModel.find({senderId,receptorId}).select(`content`)
-        console.log('a')
-        const senderEmail = await userModel.find({_id: senderId}).select(`email`);
-        console.log(senderEmail[0].email)
 
-        for(let i = 0; i<messages.length; i++){
-            console.log('b')
-            const pkey = await pkModel.find({senderId}).select(`key`)
-            const currentDecryptedMsg = await decryptMessage(messages[i],pkey,senderEmail)
-            decryptedMsgs.push(currentDecryptedMsg)
-        }
-        res.status(200).json(decryptedMsgs);
+        const sentMessages = await msgModel.find({senderId,receptorId})
+        const recivedMessages = await msgModel.find({senderId: receptorId, receptorId: senderId})
+
+        const receptorPkey = await pkModel.find({userId: receptorId}).select(`key`)
+        const senderPkey = await pkModel.find({userId: senderId}).select(`key`)
+      
+        let decryptedSent = []
+        let decryptedRecived = []
+
+         for(let i = 0; i<sentMessages.length; i++){
+            const currentDecryptedMsg = msg.decryptMessage(sentMessages[i].content, receptorPkey[0].key, receptorId)
+            const formarMSG = {
+                "senderId": senderId,
+                "receptorId": receptorId,
+                "content": currentDecryptedMsg,
+                "createdAt": recivedMessages[i].createdAt
+            }
+            decryptedSent.push(formarMSG)
+        } 
+
+
+        for(let i = 0; i<recivedMessages.length; i++){
+            const currentDecryptedMsg = msg.decryptMessage(recivedMessages[i].content, senderPkey[0].key, senderId)
+            const formarMSG = {
+                "senderId": receptorId,
+                "receptorId": senderId,
+                "content": currentDecryptedMsg,
+                "createdAt": recivedMessages[i].createdAt
+            }
+            decryptedRecived.push(formarMSG)
+        } 
+
+        const chat = [...decryptedSent, ...decryptedRecived]
+        chat.sort((a, b) => a.createdAt - b.createdAt)
+        res.status(200).json(chat);
     }catch{
         res.status(404).json({message: "Not users found"})
     }
